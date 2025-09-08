@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { Column } from './Column';
 import { AddTaskForm } from './AddTaskForm';
 import { Task, Column as ColumnType } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-
-const STORAGE_KEY = 'kanban-tasks';
+import { Plus, Loader2 } from 'lucide-react';
+import { useTasks } from '@/hooks/useTasks';
 
 const initialColumns: ColumnType[] = [
   { id: 'todo', title: 'To Do', status: 'todo', tasks: [] },
@@ -16,89 +15,54 @@ const initialColumns: ColumnType[] = [
 ];
 
 export const KanbanBoard = () => {
-  const [columns, setColumns] = useState<ColumnType[]>(initialColumns);
   const [showAddForm, setShowAddForm] = useState(false);
+  const { tasks, loading, createTask, updateTask, deleteTask } = useTasks();
 
-  // Load tasks from localStorage on mount
-  useEffect(() => {
-    const storedTasks = localStorage.getItem(STORAGE_KEY);
-    if (storedTasks) {
-      try {
-        const tasks: Task[] = JSON.parse(storedTasks);
-        const updatedColumns = initialColumns.map(column => ({
-          ...column,
-          tasks: tasks.filter(task => task.status === column.status)
-        }));
-        setColumns(updatedColumns);
-      } catch (error) {
-        console.error('Error loading tasks from localStorage:', error);
-      }
-    }
-  }, []);
+  const columns = useMemo(() => {
+    return initialColumns.map(column => ({
+      ...column,
+      tasks: tasks.filter(task => task.status === column.status)
+    }));
+  }, [tasks]);
 
-  // Save tasks to localStorage whenever columns change
-  useEffect(() => {
-    const allTasks = columns.flatMap(column => column.tasks);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allTasks));
-  }, [columns]);
-
-  const onDragEnd = (result: DropResult) => {
+  const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
     const { source, destination } = result;
-    const sourceColumnIndex = columns.findIndex(col => col.id === source.droppableId);
-    const destColumnIndex = columns.findIndex(col => col.id === destination.droppableId);
-
-    if (sourceColumnIndex === -1 || destColumnIndex === -1) return;
-
-    const newColumns = [...columns];
-    const sourceColumn = { ...newColumns[sourceColumnIndex] };
-    const destColumn = { ...newColumns[destColumnIndex] };
-
-    // Remove task from source
-    const [removedTask] = sourceColumn.tasks.splice(source.index, 1);
-
-    // Add to destination with updated status
-    const updatedTask = { 
-      ...removedTask, 
-      status: destColumn.status,
-      updatedAt: new Date()
-    };
     
-    destColumn.tasks.splice(destination.index, 0, updatedTask);
+    // Find the task being moved
+    const sourceColumn = columns.find(col => col.id === source.droppableId);
+    if (!sourceColumn) return;
 
-    newColumns[sourceColumnIndex] = sourceColumn;
-    newColumns[destColumnIndex] = destColumn;
+    const task = sourceColumn.tasks[source.index];
+    if (!task) return;
 
-    setColumns(newColumns);
+    // If moving to different column, update status
+    if (source.droppableId !== destination.droppableId) {
+      const newStatus = destination.droppableId as Task['status'];
+      await updateTask(task.id, { status: newStatus });
+    }
   };
 
-  const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const updatedColumns = columns.map(column =>
-      column.status === newTask.status
-        ? { ...column, tasks: [...column.tasks, newTask] }
-        : column
-    );
-
-    setColumns(updatedColumns);
+  const handleAddTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+    await createTask(taskData);
     setShowAddForm(false);
   };
 
-  const deleteTask = (taskId: string) => {
-    const updatedColumns = columns.map(column => ({
-      ...column,
-      tasks: column.tasks.filter(task => task.id !== taskId)
-    }));
-
-    setColumns(updatedColumns);
+  const handleDeleteTask = async (taskId: string) => {
+    await deleteTask(taskId);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-bg p-6 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-foreground">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>加载任务中...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-bg p-6">
@@ -122,7 +86,7 @@ export const KanbanBoard = () => {
         {showAddForm && (
           <div className="mb-6">
             <AddTaskForm
-              onSubmit={addTask}
+              onSubmit={handleAddTask}
               onCancel={() => setShowAddForm(false)}
             />
           </div>
@@ -135,7 +99,7 @@ export const KanbanBoard = () => {
               <Column
                 key={column.id}
                 column={column}
-                onDeleteTask={deleteTask}
+                onDeleteTask={handleDeleteTask}
               />
             ))}
           </div>
