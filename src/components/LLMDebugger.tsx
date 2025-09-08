@@ -45,7 +45,7 @@ export function LLMDebugger() {
         provider: 'DMXAPI',
         model: 'gpt-5-mini',
         baseUrl: config.baseUrl || 'https://api.dmxapi.cn/v1/chat/completions',
-      };
+      } as LLMConfig;
       setConfig(newConfig);
       return;
     }
