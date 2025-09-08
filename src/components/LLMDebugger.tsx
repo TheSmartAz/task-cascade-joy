@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { llmService } from '@/services/llmService';
+import { configService } from '@/services/configService';
 import { taskGenerationService } from '@/services/taskGenerationService';
 import { LLMConfig } from '@/types/llm';
 import { useToast } from '@/hooks/use-toast';
@@ -29,11 +29,16 @@ export function LLMDebugger() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const savedConfig = localStorage.getItem('llm-config');
+    // Load saved configuration on component mount
+    const savedConfig = configService.getLLMConfig();
     if (savedConfig) {
-      const parsed = JSON.parse(savedConfig);
-      setConfig(parsed);
-      llmService.setConfig(parsed);
+      setConfig(savedConfig);
+    }
+
+    // Load saved system prompt
+    const savedPrompt = configService.loadSystemPrompt();
+    if (savedPrompt) {
+      setSystemPrompt(savedPrompt);
     }
   }, []);
 
@@ -64,8 +69,7 @@ export function LLMDebugger() {
       return;
     }
 
-    llmService.setConfig(config);
-    localStorage.setItem('llm-config', JSON.stringify(config));
+    configService.saveLLMConfig(config);
     toast({
       title: "成功",
       description: "LLM配置已保存",
@@ -73,8 +77,7 @@ export function LLMDebugger() {
   };
 
   const saveSystemPrompt = () => {
-    taskGenerationService.setSystemPrompt(systemPrompt);
-    localStorage.setItem('system-prompt', systemPrompt);
+    configService.saveSystemPrompt(systemPrompt);
     toast({
       title: "成功",
       description: "系统提示已保存",
@@ -84,8 +87,7 @@ export function LLMDebugger() {
   const resetSystemPrompt = () => {
     const defaultPrompt = taskGenerationService.getDefaultSystemPrompt();
     setSystemPrompt(defaultPrompt);
-    taskGenerationService.setSystemPrompt(defaultPrompt);
-    localStorage.removeItem('system-prompt');
+    configService.saveSystemPrompt(defaultPrompt);
     toast({
       title: "重置完成",
       description: "系统提示已重置为默认值",
@@ -102,7 +104,7 @@ export function LLMDebugger() {
       return;
     }
 
-    if (!llmService.getConfig()) {
+    if (!configService.isLLMConfigured()) {
       toast({
         title: "错误",
         description: "请先配置并保存LLM设置",

@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Loader2, Mic, MicOff } from 'lucide-react';
+import { Sparkles, Loader2, Mic, MicOff, Settings } from 'lucide-react';
 import { taskGenerationService } from '@/services/taskGenerationService';
+import { configService } from '@/services/configService';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AITaskInputProps {
   onTasksGenerated: (tasks: Array<{
@@ -20,6 +22,7 @@ export const AITaskInput = ({ onTasksGenerated }: AITaskInputProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -61,9 +64,31 @@ export const AITaskInput = ({ onTasksGenerated }: AITaskInputProps) => {
       return;
     }
 
+    // Check if LLM is configured
+    if (!configService.isLLMConfigured()) {
+      toast({
+        title: "AI 配置未完成",
+        description: "请先在调试页面配置 AI 服务",
+        variant: "destructive",
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/debug')}
+          >
+            去配置
+          </Button>
+        ),
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    
     try {
-      setIsGenerating(true);
-      const response = await taskGenerationService.generateTasks({ input });
+      const response = await taskGenerationService.generateTasks({
+        input: input.trim(),
+      });
       
       if (response.tasks && response.tasks.length > 0) {
         onTasksGenerated(response.tasks);
@@ -74,18 +99,38 @@ export const AITaskInput = ({ onTasksGenerated }: AITaskInputProps) => {
         });
       } else {
         toast({
-          title: "生成失败",
-          description: "未能生成有效任务",
+          title: "任务生成失败",
+          description: "未能生成有效任务，请重试",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Failed to generate tasks:', error);
-      toast({
-        title: "生成失败",
-        description: "请检查AI配置或稍后重试",
-        variant: "destructive",
-      });
+      console.error('Task generation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : "请检查网络连接或稍后重试";
+      
+      // If it's a configuration error, guide user to debug page
+      if (errorMessage.includes('configuration') || errorMessage.includes('API')) {
+        toast({
+          title: "AI 服务配置错误",
+          description: errorMessage,
+          variant: "destructive",
+          action: (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/debug')}
+            >
+              检查配置
+            </Button>
+          ),
+        });
+      } else {
+        toast({
+          title: "任务生成失败",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
