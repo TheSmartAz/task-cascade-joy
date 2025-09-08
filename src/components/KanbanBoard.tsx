@@ -142,6 +142,11 @@ export const KanbanBoard = () => {
           </Button>
         </div>
 
+        {/* AI Task Input */}
+        <div className="mb-8">
+          <AITaskInput onTasksGenerated={handleTasksGenerated} />
+        </div>
+
         {/* Kanban Board */}
         <DragDropContext onDragEnd={onDragEnd}>
           <div className="space-y-6">
@@ -165,11 +170,6 @@ export const KanbanBoard = () => {
             </div>
           </div>
         </DragDropContext>
-
-        {/* AI Task Input */}
-        <div className="mt-8">
-          <AITaskInput onTasksGenerated={handleTasksGenerated} />
-        </div>
 
         {/* Task Detail Dialog */}
         <TaskDetailDialog
