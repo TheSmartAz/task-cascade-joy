@@ -94,11 +94,8 @@ export const TaskDetailDialog = ({ task, isOpen, onClose, onUpdate }: TaskDetail
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            任务详情
-          </DialogTitle>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Task Details</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
