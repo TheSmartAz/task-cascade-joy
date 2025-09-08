@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { Column } from './Column';
-import { AddTaskForm } from './AddTaskForm';
 import { ArchiveDialog } from './ArchiveDialog';
 import { ArchiveDropZone } from './ArchiveDropZone';
 import { TaskDetailDialog } from './TaskDetailDialog';
+import { AITaskInput } from './AITaskInput';
 import { Task, Column as ColumnType } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, Settings } from 'lucide-react';
+import { Loader2, Settings } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,7 +19,6 @@ const initialColumns: ColumnType[] = [
 ];
 
 export const KanbanBoard = () => {
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskDetail, setShowTaskDetail] = useState(false);
@@ -90,10 +89,6 @@ export const KanbanBoard = () => {
     }
   };
 
-  const handleAddTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await createTask(taskData);
-    setShowAddForm(false);
-  };
 
   const handleDeleteTask = async (taskId: string) => {
     await deleteTask(taskId);
@@ -142,29 +137,10 @@ export const KanbanBoard = () => {
             <h1 className="text-3xl font-bold text-foreground mb-2">项目看板</h1>
             <p className="text-muted-foreground">拖拽任务卡片来管理项目进度</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" onClick={() => window.open('/debug', '_blank')}>
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={() => setShowAddForm(true)}
-              className="bg-gradient-primary text-primary-foreground shadow-card hover:shadow-card-hover transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              添加任务
-            </Button>
-          </div>
+          <Button variant="outline" size="icon" onClick={() => window.open('/debug', '_blank')}>
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
-
-        {/* Add Task Form */}
-        {showAddForm && (
-          <div className="mb-6">
-            <AddTaskForm 
-              onSubmit={handleAddTask}
-              onCancel={() => setShowAddForm(false)}
-            />
-          </div>
-        )}
 
         {/* Kanban Board */}
         <DragDropContext onDragEnd={onDragEnd}>
@@ -189,6 +165,11 @@ export const KanbanBoard = () => {
             </div>
           </div>
         </DragDropContext>
+
+        {/* AI Task Input */}
+        <div className="mt-8">
+          <AITaskInput onTasksGenerated={handleTasksGenerated} />
+        </div>
 
         {/* Task Detail Dialog */}
         <TaskDetailDialog
