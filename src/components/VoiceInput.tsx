@@ -156,7 +156,7 @@ export function VoiceInput({ onVoiceInput, className }: VoiceInputProps) {
     <div className={cn("relative", className)}>
       <Button
         variant={recording ? "default" : "outline"}
-        size="lg"
+        size="icon"
         onClick={toggleRecording}
         className={cn(
           "relative overflow-hidden transition-all duration-300",
@@ -164,11 +164,10 @@ export function VoiceInput({ onVoiceInput, className }: VoiceInputProps) {
         )}
       >
         {recording ? (
-          <MicOff className="h-5 w-5 mr-2" />
+          <MicOff className="h-5 w-5" />
         ) : (
-          <Mic className="h-5 w-5 mr-2" />
+          <Mic className="h-5 w-5" />
         )}
-        {recording ? "停止录音" : "语音输入"}
         
         {/* 音频可视化效果 */}
         {recording && (
