@@ -31,6 +31,7 @@ export interface TaskGenerationResponse {
     title: string;
     description: string;
     status: 'todo' | 'in-progress' | 'done' | 'archived';
+    priority: 'high' | 'medium' | 'low';
     dueDate?: Date;
   }>;
 }

@@ -23,6 +23,7 @@ export const useTasks = () => {
         title: task.title,
         description: task.description || '',
         status: task.status as Task['status'],
+        priority: task.priority as Task['priority'],
         dueDate: task.due_date ? new Date(task.due_date) : undefined,
         createdAt: new Date(task.created_at),
         updatedAt: new Date(task.updated_at)
@@ -49,6 +50,7 @@ export const useTasks = () => {
           title: taskData.title,
           description: taskData.description,
           status: taskData.status,
+          priority: taskData.priority,
           due_date: taskData.dueDate?.toISOString()
         }])
         .select()
@@ -61,6 +63,7 @@ export const useTasks = () => {
         title: data.title,
         description: data.description || '',
         status: data.status as Task['status'],
+        priority: data.priority as Task['priority'],
         dueDate: data.due_date ? new Date(data.due_date) : undefined,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
@@ -93,6 +96,7 @@ export const useTasks = () => {
           title: updates.title,
           description: updates.description,
           status: updates.status,
+          priority: updates.priority,
           due_date: updates.dueDate?.toISOString()
         })
         .eq('id', id)
@@ -106,6 +110,7 @@ export const useTasks = () => {
         title: data.title,
         description: data.description || '',
         status: data.status as Task['status'],
+        priority: data.priority as Task['priority'],
         dueDate: data.due_date ? new Date(data.due_date) : undefined,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)

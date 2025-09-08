@@ -42,6 +42,7 @@ export const TaskDetailDialog = ({ task, isOpen, onClose, onUpdate }: TaskDetail
         title: editingTask.title,
         description: editingTask.description,
         status: editingTask.status,
+        priority: editingTask.priority,
         dueDate: editingTask.dueDate,
       });
       onClose();
@@ -123,8 +124,8 @@ export const TaskDetailDialog = ({ task, isOpen, onClose, onUpdate }: TaskDetail
             />
           </div>
 
-          {/* 状态和截止时间 */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* 状态、优先级和截止时间 */}
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">状态</Label>
               <Select
@@ -140,6 +141,23 @@ export const TaskDetailDialog = ({ task, isOpen, onClose, onUpdate }: TaskDetail
                       {option.label}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="priority">优先级</Label>
+              <Select
+                value={editingTask.priority}
+                onValueChange={(value) => setEditingTask(prev => prev ? { ...prev, priority: value as Task['priority'] } : null)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">高</SelectItem>
+                  <SelectItem value="medium">中</SelectItem>
+                  <SelectItem value="low">低</SelectItem>
                 </SelectContent>
               </Select>
             </div>

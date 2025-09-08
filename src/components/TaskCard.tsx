@@ -12,7 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Calendar, Clock } from 'lucide-react';
+import { Trash2, Calendar, Clock, AlertTriangle, Minus, ArrowDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -63,6 +63,30 @@ export const TaskCard = ({
 
   const config = dueDateConfig[dueDateStatus];
 
+  const priorityConfig = {
+    high: { 
+      icon: AlertTriangle, 
+      color: 'text-red-500', 
+      bg: 'bg-red-50 dark:bg-red-950/20', 
+      label: '高' 
+    },
+    medium: { 
+      icon: Minus, 
+      color: 'text-yellow-500', 
+      bg: 'bg-yellow-50 dark:bg-yellow-950/20', 
+      label: '中' 
+    },
+    low: { 
+      icon: ArrowDown, 
+      color: 'text-green-500', 
+      bg: 'bg-green-50 dark:bg-green-950/20', 
+      label: '低' 
+    }
+  };
+
+  const priorityConf = priorityConfig[task.priority];
+  const PriorityIcon = priorityConf.icon;
+
   return (
     <Draggable draggableId={task.id} index={index}>
       {(provided, snapshot) => (
@@ -85,7 +109,15 @@ export const TaskCard = ({
               <h3 className="font-medium text-card-foreground leading-tight flex-1">
                 {task.title}
               </h3>
-              <div className="flex gap-1 shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
+                <div className={cn(
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
+                  priorityConf.bg,
+                  priorityConf.color
+                )}>
+                  <PriorityIcon className="w-3 h-3" />
+                  <span>{priorityConf.label}</span>
+                </div>
                 <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                   <AlertDialogTrigger asChild>
                     <Button

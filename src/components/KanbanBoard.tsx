@@ -103,10 +103,13 @@ export const KanbanBoard = () => {
     await updateTask(taskId, { status: 'archived' });
   };
 
-  const handleTasksGenerated = async (generatedTasks: Array<{ title: string; description: string; status: 'todo' | 'in-progress' | 'done' | 'archived' }>) => {
+  const handleTasksGenerated = async (generatedTasks: Array<{ title: string; description: string; status: 'todo' | 'in-progress' | 'done' | 'archived'; priority?: 'high' | 'medium' | 'low' }>) => {
     try {
       for (const task of generatedTasks) {
-        await createTask(task);
+        await createTask({
+          ...task,
+          priority: task.priority || 'medium'
+        });
       }
     } catch (error) {
       console.error('Failed to create generated tasks:', error);

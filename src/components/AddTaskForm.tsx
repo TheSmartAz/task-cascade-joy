@@ -22,6 +22,7 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
     title: '',
     description: '',
     status: 'todo' as Task['status'],
+    priority: 'medium' as Task['priority'],
     dueDate: undefined as Date | undefined
   });
   const [aiGenerating, setAiGenerating] = useState(false);
@@ -36,10 +37,11 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
       title: formData.title.trim(),
       description: formData.description.trim(),
       status: formData.status,
+      priority: formData.priority,
       dueDate: formData.dueDate
     });
 
-    setFormData({ title: '', description: '', status: 'todo', dueDate: undefined });
+    setFormData({ title: '', description: '', status: 'todo', priority: 'medium', dueDate: undefined });
   };
 
   const statusOptions = [
@@ -59,6 +61,7 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
           title: firstTask.title,
           description: firstTask.description,
           status: firstTask.status,
+          priority: firstTask.priority,
           dueDate: firstTask.dueDate
         });
         toast({
@@ -98,6 +101,7 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
           ...prev,
           title: firstTask.title,
           description: firstTask.description,
+          priority: firstTask.priority,
           dueDate: firstTask.dueDate
         }));
         toast({
@@ -189,26 +193,47 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
             />
           </div>
 
-          {/* Status Select */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              初始状态
-            </label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as Task['status'] }))}
-            >
-              <SelectTrigger className="transition-smooth focus:ring-2 focus:ring-primary/20">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Priority and Status */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                优先级
+              </label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value as Task['priority'] }))}
+              >
+                <SelectTrigger className="transition-smooth focus:ring-2 focus:ring-primary/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">高</SelectItem>
+                  <SelectItem value="medium">中</SelectItem>
+                  <SelectItem value="low">低</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                初始状态
+              </label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as Task['status'] }))}
+              >
+                <SelectTrigger className="transition-smooth focus:ring-2 focus:ring-primary/20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Form Actions */}

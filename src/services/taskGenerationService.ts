@@ -6,10 +6,11 @@ const DEFAULT_SYSTEM_PROMPT = `你是一个专业的任务管理助手。请根�
 规则：
 1. 将用户输入转换为具体的、可执行的任务
 2. 每个任务应该有清晰的标题和描述
-3. 根据任务复杂度和紧急程度设置合适的状态
+3. 根据任务复杂度和紧急程度设置合适的状态和优先级
 4. 返回JSON格式，包含tasks数组
-5. 每个任务包含title、description、status字段
+5. 每个任务包含title、description、status、priority字段
 6. status只能是：todo、in-progress、done、archived
+7. priority只能是：high、medium、low
 
 返回格式示例：
 {
@@ -17,7 +18,8 @@ const DEFAULT_SYSTEM_PROMPT = `你是一个专业的任务管理助手。请根�
     {
       "title": "任务标题",
       "description": "任务详细描述",
-      "status": "todo"
+      "status": "todo",
+      "priority": "medium"
     }
   ]
 }`;
@@ -67,6 +69,7 @@ export class TaskGenerationService {
           title: request.input.slice(0, 50) + (request.input.length > 50 ? '...' : ''),
           description: request.input,
           status: 'todo' as const,
+          priority: 'medium' as const,
           dueDate: undefined
         }]
       };
