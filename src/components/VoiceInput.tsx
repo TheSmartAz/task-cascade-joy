@@ -52,7 +52,7 @@ export function VoiceInput({ onVoiceInput, className }: VoiceInputProps) {
           stopRecording();
           toast({
             title: "语音识别成功",
-            description: `识别内容: ${finalTranscript.slice(0, 50)}...`,
+            description: "正在通过AI处理语音内容...",
           });
         }
       };

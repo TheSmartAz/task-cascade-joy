@@ -4,9 +4,10 @@ import { Column } from './Column';
 import { AddTaskForm } from './AddTaskForm';
 import { AITaskGenerator } from './AITaskGenerator';
 import { VoiceInput } from './VoiceInput';
+import { ArchiveDialog } from './ArchiveDialog';
 import { Task, Column as ColumnType } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, Settings } from 'lucide-react';
+import { Plus, Loader2, Settings, Archive } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,14 +21,20 @@ const initialColumns: ColumnType[] = [
 export const KanbanBoard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const { tasks, loading, createTask, updateTask, deleteTask } = useTasks();
   const { toast } = useToast();
 
   const columns = useMemo(() => {
-    return initialColumns.map(column => ({
+    // 只显示前三列，隐藏archived
+    return initialColumns.filter(col => col.status !== 'archived').map(column => ({
       ...column,
       tasks: tasks.filter(task => task.status === column.status)
     }));
+  }, [tasks]);
+
+  const archivedTasks = useMemo(() => {
+    return tasks.filter(task => task.status === 'archived');
   }, [tasks]);
 
   const onDragEnd = async (result: DropResult) => {
@@ -58,6 +65,10 @@ export const KanbanBoard = () => {
     await deleteTask(taskId);
   };
 
+  const handleArchiveTask = async (taskId: string) => {
+    await updateTask(taskId, { status: 'archived' });
+  };
+
   const handleTasksGenerated = async (generatedTasks: Array<{ title: string; description: string; status: 'todo' | 'in-progress' | 'done' | 'archived' }>) => {
     try {
       for (const task of generatedTasks) {
@@ -78,15 +89,16 @@ export const KanbanBoard = () => {
     if (!text.trim()) return;
     
     try {
-      await createTask({
+      // 使用LLM处理语音输入，直接创建任务
+      await handleTasksGenerated([{
         title: text.length > 50 ? text.slice(0, 50) + '...' : text,
         description: text,
-        status: 'todo'
-      });
+        status: 'todo' as const
+      }]);
       
       toast({
-        title: "语音任务创建成功",
-        description: `已创建任务: ${text.slice(0, 30)}...`,
+        title: "语音任务创建成功", 
+        description: "AI已处理语音内容并创建任务",
       });
     } catch (error) {
       console.error('Failed to create voice task:', error);
@@ -163,16 +175,41 @@ export const KanbanBoard = () => {
 
         {/* Kanban Board */}
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {columns.map((column) => (
               <Column
                 key={column.id}
                 column={column}
                 onDeleteTask={handleDeleteTask}
+                onArchiveTask={handleArchiveTask}
               />
             ))}
           </div>
         </DragDropContext>
+
+        {/* Archive Button */}
+        <div className="flex justify-center mt-8">
+          <Button
+            variant="outline"
+            onClick={() => setShowArchiveDialog(true)}
+            className="bg-muted/50 hover:bg-muted"
+          >
+            <Archive className="h-4 w-4 mr-2" />
+            查看归档 ({archivedTasks.length})
+          </Button>
+        </div>
+
+        {/* Archive Dialog */}
+        {showArchiveDialog && (
+          <ArchiveDialog
+            archivedTasks={archivedTasks}
+            onMoveTask={async (taskId, updates) => {
+              await updateTask(taskId, updates);
+            }}
+            onDeleteTask={handleDeleteTask}
+            onClose={() => setShowArchiveDialog(false)}
+          />
+        )}
       </div>
     </div>
   );

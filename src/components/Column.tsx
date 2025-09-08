@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface ColumnProps {
   column: ColumnType;
   onDeleteTask: (taskId: string) => void;
+  onArchiveTask: (taskId: string) => void;
 }
 
 const columnStyles = {
@@ -31,7 +32,7 @@ const columnStyles = {
   }
 };
 
-export const Column = ({ column, onDeleteTask }: ColumnProps) => {
+export const Column = ({ column, onDeleteTask, onArchiveTask }: ColumnProps) => {
   const styles = columnStyles[column.status];
 
   return (
@@ -67,6 +68,7 @@ export const Column = ({ column, onDeleteTask }: ColumnProps) => {
                 task={task}
                 index={index}
                 onDelete={onDeleteTask}
+                onArchive={onArchiveTask}
               />
             ))}
             {provided.placeholder}

@@ -1,16 +1,37 @@
 import { Draggable } from 'react-beautiful-dnd';
 import { Task } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
-import { Trash2, Calendar } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Trash2, Calendar, Archive } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 interface TaskCardProps {
   task: Task;
   index: number;
   onDelete: (taskId: string) => void;
+  onArchive?: (taskId: string) => void;
+  showArchiveButton?: boolean;
 }
 
-export const TaskCard = ({ task, index, onDelete }: TaskCardProps) => {
+export const TaskCard = ({ 
+  task, 
+  index, 
+  onDelete, 
+  onArchive,
+  showArchiveButton = true 
+}: TaskCardProps) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('zh-CN', {
       month: 'short',
@@ -38,17 +59,51 @@ export const TaskCard = ({ task, index, onDelete }: TaskCardProps) => {
               <h3 className="font-medium text-card-foreground leading-tight flex-1">
                 {task.title}
               </h3>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(task.id);
-                }}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
+              <div className="flex gap-1 shrink-0">
+                {showArchiveButton && onArchive && task.status !== 'archived' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onArchive(task.id);
+                    }}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-orange-600 hover:bg-orange-100 transition-colors"
+                  >
+                    <Archive className="w-3 h-3" />
+                  </Button>
+                )}
+                
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>确认删除任务</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        您确定要删除任务 "{task.title}" 吗？此操作无法撤销。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDelete(task.id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        删除
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
 
             {task.description && (
