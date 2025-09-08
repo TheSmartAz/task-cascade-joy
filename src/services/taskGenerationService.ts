@@ -66,7 +66,8 @@ export class TaskGenerationService {
         tasks: [{
           title: request.input.slice(0, 50) + (request.input.length > 50 ? '...' : ''),
           description: request.input,
-          status: 'todo' as const
+          status: 'todo' as const,
+          dueDate: undefined
         }]
       };
     }

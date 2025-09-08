@@ -13,6 +13,7 @@ export const useTasks = () => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
+        .order('due_date', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -22,6 +23,7 @@ export const useTasks = () => {
         title: task.title,
         description: task.description || '',
         status: task.status as Task['status'],
+        dueDate: task.due_date ? new Date(task.due_date) : undefined,
         createdAt: new Date(task.created_at),
         updatedAt: new Date(task.updated_at)
       }));
@@ -46,7 +48,8 @@ export const useTasks = () => {
         .insert([{
           title: taskData.title,
           description: taskData.description,
-          status: taskData.status
+          status: taskData.status,
+          due_date: taskData.dueDate?.toISOString()
         }])
         .select()
         .single();
@@ -58,6 +61,7 @@ export const useTasks = () => {
         title: data.title,
         description: data.description || '',
         status: data.status as Task['status'],
+        dueDate: data.due_date ? new Date(data.due_date) : undefined,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };
@@ -88,7 +92,8 @@ export const useTasks = () => {
         .update({
           title: updates.title,
           description: updates.description,
-          status: updates.status
+          status: updates.status,
+          due_date: updates.dueDate?.toISOString()
         })
         .eq('id', id)
         .select()
@@ -101,6 +106,7 @@ export const useTasks = () => {
         title: data.title,
         description: data.description || '',
         status: data.status as Task['status'],
+        dueDate: data.due_date ? new Date(data.due_date) : undefined,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at)
       };

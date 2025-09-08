@@ -4,11 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Task } from '@/types/kanban';
 import { X, Plus, Wand2 } from 'lucide-react';
 import { VoiceInput } from '@/components/VoiceInput';
 import { taskGenerationService } from '@/services/taskGenerationService';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 interface AddTaskFormProps {
   onSubmit: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -19,7 +21,8 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    status: 'todo' as Task['status']
+    status: 'todo' as Task['status'],
+    dueDate: undefined as Date | undefined
   });
   const [aiGenerating, setAiGenerating] = useState(false);
   const { toast } = useToast();
@@ -32,10 +35,11 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
     onSubmit({
       title: formData.title.trim(),
       description: formData.description.trim(),
-      status: formData.status
+      status: formData.status,
+      dueDate: formData.dueDate
     });
 
-    setFormData({ title: '', description: '', status: 'todo' });
+    setFormData({ title: '', description: '', status: 'todo', dueDate: undefined });
   };
 
   const statusOptions = [
@@ -54,7 +58,8 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
         setFormData({
           title: firstTask.title,
           description: firstTask.description,
-          status: firstTask.status
+          status: firstTask.status,
+          dueDate: firstTask.dueDate
         });
         toast({
           title: "AI生成成功",
@@ -93,6 +98,7 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
           ...prev,
           title: firstTask.title,
           description: firstTask.description,
+          dueDate: firstTask.dueDate
         }));
         toast({
           title: "AI优化成功",
@@ -165,6 +171,21 @@ export const AddTaskForm = ({ onSubmit, onCancel }: AddTaskFormProps) => {
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               className="transition-smooth focus:ring-2 focus:ring-primary/20 resize-none"
               rows={3}
+            />
+          </div>
+
+          {/* 截止时间 */}
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">截止时间</Label>
+            <Input
+              id="dueDate"
+              type="datetime-local"
+              value={formData.dueDate ? format(formData.dueDate, "yyyy-MM-dd'T'HH:mm") : ''}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                dueDate: e.target.value ? new Date(e.target.value) : undefined 
+              }))}
+              className="transition-smooth focus:ring-2 focus:ring-primary/20"
             />
           </div>
 

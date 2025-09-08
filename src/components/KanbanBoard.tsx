@@ -3,9 +3,11 @@ import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { Column } from './Column';
 import { AddTaskForm } from './AddTaskForm';
 import { ArchiveDialog } from './ArchiveDialog';
+import { ArchiveDropZone } from './ArchiveDropZone';
+import { TaskDetailDialog } from './TaskDetailDialog';
 import { Task, Column as ColumnType } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, Settings, Archive } from 'lucide-react';
+import { Plus, Loader2, Settings } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,14 +21,23 @@ const initialColumns: ColumnType[] = [
 export const KanbanBoard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
   const { tasks, loading, createTask, updateTask, deleteTask } = useTasks();
   const { toast } = useToast();
 
   const columns = useMemo(() => {
-    // 只显示前三列，隐藏archived
+    // 只显示前三列，隐藏archived，按截止时间排序
     return initialColumns.filter(col => col.status !== 'archived').map(column => ({
       ...column,
       tasks: tasks.filter(task => task.status === column.status)
+        .sort((a, b) => {
+          // 按截止时间排序，无截止时间的排在最后
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return a.dueDate.getTime() - b.dueDate.getTime();
+        })
     }));
   }, [tasks]);
 
@@ -34,10 +45,36 @@ export const KanbanBoard = () => {
     return tasks.filter(task => task.status === 'archived');
   }, [tasks]);
 
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskDetail(true);
+  };
+
+  const handleTaskUpdate = async (taskId: string, updates: Partial<Task>) => {
+    await updateTask(taskId, updates);
+    setShowTaskDetail(false);
+  };
+
   const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
     const { source, destination } = result;
+    
+    // 检查是否拖拽到归档按钮
+    if (destination.droppableId === 'archive-drop-zone') {
+      const sourceColumn = columns.find(col => col.id === source.droppableId);
+      if (!sourceColumn) return;
+      
+      const task = sourceColumn.tasks[source.index];
+      if (task && task.status !== 'archived') {
+        await updateTask(task.id, { status: 'archived' });
+        toast({
+          title: "任务已归档",
+          description: `任务 "${task.title}" 已移动到归档`,
+        });
+      }
+      return;
+    }
     
     // Find the task being moved
     const sourceColumn = columns.find(col => col.id === source.droppableId);
@@ -128,29 +165,38 @@ export const KanbanBoard = () => {
 
         {/* Kanban Board */}
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {columns.map((column) => (
-              <Column
-                key={column.id}
-                column={column}
-                onDeleteTask={handleDeleteTask}
-                onArchiveTask={handleArchiveTask}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {columns.map((column) => (
+                <Column
+                  key={column.id}
+                  column={column}
+                  onDeleteTask={handleDeleteTask}
+                  onTaskClick={handleTaskClick}
+                />
+              ))}
+            </div>
+
+            {/* Archive Drop Zone */}
+            <div className="mt-8">
+              <ArchiveDropZone 
+                onArchiveClick={() => setShowArchiveDialog(true)}
+                archivedCount={archivedTasks.length}
               />
-            ))}
+            </div>
           </div>
         </DragDropContext>
 
-        {/* Archive Button */}
-        <div className="flex justify-center mt-8">
-          <Button
-            variant="outline"
-            onClick={() => setShowArchiveDialog(true)}
-            className="bg-muted/50 hover:bg-muted"
-          >
-            <Archive className="h-4 w-4 mr-2" />
-            查看归档 ({archivedTasks.length})
-          </Button>
-        </div>
+        {/* Task Detail Dialog */}
+        <TaskDetailDialog
+          task={selectedTask}
+          isOpen={showTaskDetail}
+          onClose={() => {
+            setShowTaskDetail(false);
+            setSelectedTask(null);
+          }}
+          onUpdate={handleTaskUpdate}
+        />
 
         {/* Archive Dialog */}
         {showArchiveDialog && (

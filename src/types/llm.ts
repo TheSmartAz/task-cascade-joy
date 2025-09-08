@@ -31,5 +31,6 @@ export interface TaskGenerationResponse {
     title: string;
     description: string;
     status: 'todo' | 'in-progress' | 'done' | 'archived';
+    dueDate?: Date;
   }>;
 }

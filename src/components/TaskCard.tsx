@@ -12,32 +12,56 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Trash2, Calendar, Archive } from 'lucide-react';
+import { Trash2, Calendar, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { format } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
   index: number;
   onDelete: (taskId: string) => void;
-  onArchive?: (taskId: string) => void;
-  showArchiveButton?: boolean;
+  onClick?: (task: Task) => void;
 }
 
 export const TaskCard = ({ 
   task, 
   index, 
-  onDelete, 
-  onArchive,
-  showArchiveButton = true 
+  onDelete,
+  onClick
 }: TaskCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('zh-CN', {
-      month: 'short',
-      day: 'numeric',
-    });
+    return format(date, 'MM-dd');
   };
+
+  const formatDueDate = (date: Date) => {
+    return format(date, 'MM-dd HH:mm');
+  };
+
+  const getDueDateStatus = (dueDate: Date | undefined) => {
+    if (!dueDate) return 'none';
+    const now = new Date();
+    const timeDiff = dueDate.getTime() - now.getTime();
+    const daysDiff = timeDiff / (1000 * 3600 * 24);
+    
+    if (daysDiff < 0) return 'overdue';
+    if (daysDiff < 1) return 'today';
+    if (daysDiff < 7) return 'soon';
+    return 'future';
+  };
+
+  const dueDateStatus = getDueDateStatus(task.dueDate);
+  const dueDateConfig = {
+    overdue: { color: 'text-red-500', bg: 'bg-red-50 border-red-200', label: '已逾期' },
+    today: { color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200', label: '今日' },
+    soon: { color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', label: '即将到期' },
+    future: { color: 'text-green-600', bg: 'bg-green-50 border-green-200', label: '' },
+    none: { color: 'text-muted-foreground', bg: '', label: '' }
+  };
+
+  const config = dueDateConfig[dueDateStatus];
 
   return (
     <Draggable draggableId={task.id} index={index}>
@@ -46,11 +70,13 @@ export const TaskCard = ({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
+          onClick={() => onClick?.(task)}
           className={cn(
-            "bg-card rounded-lg p-4 shadow-card transition-all duration-200 cursor-grab active:cursor-grabbing",
+            "bg-card rounded-lg p-4 shadow-card transition-all duration-200 cursor-pointer hover:cursor-pointer",
             "border border-border/50",
             "hover:shadow-card-hover hover:-translate-y-1",
-            snapshot.isDragging && "rotate-3 shadow-card-hover"
+            snapshot.isDragging && "rotate-3 shadow-card-hover",
+            task.dueDate && dueDateStatus !== 'none' && dueDateStatus !== 'future' && config.bg
           )}
         >
           {/* Task Content */}
@@ -60,26 +86,14 @@ export const TaskCard = ({
                 {task.title}
               </h3>
               <div className="flex gap-1 shrink-0">
-                {showArchiveButton && onArchive && task.status !== 'archived' && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onArchive(task.id);
-                    }}
-                    className="h-6 w-6 p-0 text-muted-foreground hover:text-orange-600 hover:bg-orange-100 transition-colors"
-                  >
-                    <Archive className="w-3 h-3" />
-                  </Button>
-                )}
-                
                 <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                   <AlertDialogTrigger asChild>
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
                       className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -107,16 +121,29 @@ export const TaskCard = ({
             </div>
 
             {task.description && (
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
                 {task.description}
               </p>
+            )}
+
+            {/* Due Date */}
+            {task.dueDate && (
+              <div className={cn(
+                "flex items-center gap-1 text-xs px-2 py-1 rounded-md",
+                config.color,
+                dueDateStatus !== 'none' && dueDateStatus !== 'future' ? "bg-transparent" : "bg-muted/50"
+              )}>
+                <Clock className="w-3 h-3" />
+                <span>{formatDueDate(task.dueDate)}</span>
+                {config.label && <span className="ml-1 font-medium">({config.label})</span>}
+              </div>
             )}
 
             {/* Task Meta */}
             <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border/30">
               <div className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
-                <span>{formatDate(task.createdAt)}</span>
+                <span>创建于 {formatDate(task.createdAt)}</span>
               </div>
               <div className="w-2 h-2 rounded-full bg-primary/40" />
             </div>

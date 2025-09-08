@@ -1,12 +1,12 @@
 import { Droppable } from 'react-beautiful-dnd';
 import { TaskCard } from './TaskCard';
-import { Column as ColumnType } from '@/types/kanban';
+import { Column as ColumnType, Task } from '@/types/kanban';
 import { cn } from '@/lib/utils';
 
 interface ColumnProps {
   column: ColumnType;
   onDeleteTask: (taskId: string) => void;
-  onArchiveTask: (taskId: string) => void;
+  onTaskClick?: (task: Task) => void;
 }
 
 const columnStyles = {
@@ -32,7 +32,7 @@ const columnStyles = {
   }
 };
 
-export const Column = ({ column, onDeleteTask, onArchiveTask }: ColumnProps) => {
+export const Column = ({ column, onDeleteTask, onTaskClick }: ColumnProps) => {
   const styles = columnStyles[column.status];
 
   return (
@@ -68,7 +68,7 @@ export const Column = ({ column, onDeleteTask, onArchiveTask }: ColumnProps) => 
                 task={task}
                 index={index}
                 onDelete={onDeleteTask}
-                onArchive={onArchiveTask}
+                onClick={onTaskClick}
               />
             ))}
             {provided.placeholder}

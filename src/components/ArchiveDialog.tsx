@@ -74,15 +74,14 @@ export const ArchiveDialog = ({
                     {...provided.droppableProps}
                     className="min-h-[400px] space-y-3 transition-colors duration-200 rounded-lg p-2"
                   >
-                    {archivedTasks.map((task, index) => (
-                      <TaskCard
-                        key={task.id}
-                        task={task}
-                        index={index}
-                        onDelete={onDeleteTask}
-                        showArchiveButton={false}
-                      />
-                    ))}
+                     {archivedTasks.map((task, index) => (
+                       <TaskCard
+                         key={task.id}
+                         task={task}
+                         index={index}
+                         onDelete={onDeleteTask}
+                       />
+                     ))}
                     {provided.placeholder}
                   </div>
                 )}
