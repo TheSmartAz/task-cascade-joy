@@ -47,6 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        kanban: {
+          todo: "hsl(var(--kanban-todo))",
+          "todo-accent": "hsl(var(--kanban-todo-accent))",
+          progress: "hsl(var(--kanban-progress))",
+          "progress-accent": "hsl(var(--kanban-progress-accent))",
+          done: "hsl(var(--kanban-done))",
+          "done-accent": "hsl(var(--kanban-done-accent))",
+          archived: "hsl(var(--kanban-archived))",
+          "archived-accent": "hsl(var(--kanban-archived-accent))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -62,6 +72,18 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-bg": "var(--gradient-bg)",
+      },
+      boxShadow: {
+        "card": "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+        "column": "var(--shadow-column)",
+      },
+      transitionProperty: {
+        "smooth": "var(--transition-smooth)",
       },
       keyframes: {
         "accordion-down": {
