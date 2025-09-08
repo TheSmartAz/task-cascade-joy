@@ -39,13 +39,13 @@ export function LLMDebugger() {
 
   const handleConfigChange = (key: keyof LLMConfig, value: any) => {
     // Apply sensible defaults when switching providers
-    if (key === 'provider' && value === 'dmxapi') {
+    if (key === 'provider' && value === 'DMXAPI') {
       const newConfig: LLMConfig = {
         ...config,
-        provider: 'dmxapi',
+        provider: 'DMXAPI',
         model: 'gpt-5-mini',
         baseUrl: config.baseUrl || 'https://api.dmxapi.cn/v1/chat/completions',
-      } as LLMConfig;
+      };
       setConfig(newConfig);
       return;
     }
@@ -169,6 +169,7 @@ export function LLMDebugger() {
                       <SelectItem value="openai">OpenAI</SelectItem>
                       <SelectItem value="claude">Claude (Anthropic)</SelectItem>
                       <SelectItem value="gemini">Gemini (Google)</SelectItem>
+                      <SelectItem value="DMXAPI">DMXAPI</SelectItem>
                       <SelectItem value="custom">自定义API</SelectItem>
                     </SelectContent>
                   </Select>
