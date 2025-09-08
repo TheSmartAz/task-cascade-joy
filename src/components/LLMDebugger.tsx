@@ -38,7 +38,19 @@ export function LLMDebugger() {
   }, []);
 
   const handleConfigChange = (key: keyof LLMConfig, value: any) => {
-    const newConfig = { ...config, [key]: value };
+    // Apply sensible defaults when switching providers
+    if (key === 'provider' && value === 'dmxapi') {
+      const newConfig: LLMConfig = {
+        ...config,
+        provider: 'dmxapi',
+        model: 'gpt-5-mini',
+        baseUrl: config.baseUrl || 'https://api.dmxapi.cn/v1/chat/completions',
+      } as LLMConfig;
+      setConfig(newConfig);
+      return;
+    }
+
+    const newConfig = { ...config, [key]: value } as LLMConfig;
     setConfig(newConfig);
   };
 
@@ -168,7 +180,7 @@ export function LLMDebugger() {
                     id="model"
                     value={config.model}
                     onChange={(e) => handleConfigChange('model', e.target.value)}
-                    placeholder="例如: gpt-3.5-turbo"
+                    placeholder="例如: gpt-5-mini"
                   />
                 </div>
               </div>
