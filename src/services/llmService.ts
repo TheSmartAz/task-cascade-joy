@@ -23,6 +23,8 @@ class LLMService {
         return this.callClaude(messages);
       case 'gemini':
         return this.callGemini(messages);
+      case 'DMXAPI':
+        return this.callDMXAPI(messages);
       case 'custom':
         return this.callCustom(messages);
       default:
@@ -131,6 +133,50 @@ class LLMService {
       },
     };
   }
+  
+  private async callDMXAPI(messages: LLMMessage[]): Promise<LLMResponse> {
+    const baseUrl = this.config!.baseUrl || 'https://api.dmxapi.cn/v1/chat/completions';
+    const response = await fetch(baseUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.config!.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.config!.model || 'gpt-5-mini',
+        messages,
+        temperature: this.config!.temperature ?? 0.7,
+        max_tokens: this.config!.maxTokens ?? 1000,
+      }),
+    });
+
+    if (!response.ok) {
+      let detail = '';
+      try {
+        const errJson = await response.json();
+        detail = errJson.error?.message || errJson.message || JSON.stringify(errJson);
+      } catch (_) {
+        try {
+          detail = await response.text();
+        } catch {}
+      }
+      throw new Error(`DMXAPI error: ${response.status} ${response.statusText}${detail ? ` - ${detail}` : ''}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content
+      || data.choices?.[0]?.text
+      || data.content
+      || data.output_text
+      || '';
+    const usage = data.usage || {
+      promptTokens: data.prompt_tokens || 0,
+      completionTokens: data.completion_tokens || 0,
+      totalTokens: data.total_tokens || 0,
+    };
+
+    return { content, usage };
+  }
 
   private async callCustom(messages: LLMMessage[]): Promise<LLMResponse> {
     const response = await fetch(this.config!.baseUrl!, {
@@ -148,7 +194,17 @@ class LLMService {
     });
 
     if (!response.ok) {
-      throw new Error(`Custom API error: ${response.statusText}`);
+      let detail = '';
+      try {
+        const errJson = await response.json();
+        detail = errJson.error?.message || errJson.message || JSON.stringify(errJson);
+      } catch (_) {
+        try {
+          detail = await response.text();
+        } catch {}
+      }
+      throw new Error(`Custom API error: ${response.status} ${response.statusText}${detail ? ` - ${detail}` : ''}`);
+;
     }
 
     const data = await response.json();
