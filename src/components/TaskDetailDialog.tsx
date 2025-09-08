@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Task } from '@/types/kanban';
-import { Calendar, Clock, Save, X } from 'lucide-react';
+import { Calendar, Clock, Save, X, Edit2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +26,7 @@ interface TaskDetailDialogProps {
 export const TaskDetailDialog = ({ task, isOpen, onClose, onUpdate }: TaskDetailDialogProps) => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
 
   useEffect(() => {
     if (task) {
@@ -102,78 +103,87 @@ export const TaskDetailDialog = ({ task, isOpen, onClose, onUpdate }: TaskDetail
 
         <div className="space-y-6 py-4">
           {/* 标题 */}
-          <div className="space-y-2">
-            <Label htmlFor="title">标题 *</Label>
-            <Input
-              id="title"
-              value={editingTask.title}
-              onChange={(e) => setEditingTask(prev => prev ? { ...prev, title: e.target.value } : null)}
-              className="text-lg font-medium"
-            />
+          <div className="space-y-3">
+            {editingTitle ? (
+              <Input
+                value={editingTask.title}
+                onChange={(e) => setEditingTask(prev => prev ? { ...prev, title: e.target.value } : null)}
+                onBlur={() => setEditingTitle(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setEditingTitle(false);
+                  }
+                }}
+                className="text-xl font-semibold border-none px-0 focus-visible:ring-0"
+                autoFocus
+              />
+            ) : (
+              <div 
+                onClick={() => setEditingTitle(true)}
+                className="flex items-center gap-2 cursor-pointer group"
+              >
+                <h2 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {editingTask.title}
+                </h2>
+                <Edit2 className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            )}
           </div>
+
+          {/* 截止时间和优先级 */}
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              type="datetime-local"
+              value={editingTask.dueDate ? format(editingTask.dueDate, "yyyy-MM-dd'T'HH:mm") : ''}
+              onChange={(e) => setEditingTask(prev => prev ? {
+                ...prev,
+                dueDate: e.target.value ? new Date(e.target.value) : undefined
+              } : null)}
+              className="border-none bg-muted/50 focus-visible:ring-1"
+            />
+            <Select
+              value={editingTask.priority}
+              onValueChange={(value) => setEditingTask(prev => prev ? { ...prev, priority: value as Task['priority'] } : null)}
+            >
+              <SelectTrigger className="border-none bg-muted/50 focus:ring-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high">高优先级</SelectItem>
+                <SelectItem value="medium">中优先级</SelectItem>
+                <SelectItem value="low">低优先级</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* 状态 */}
+          <Select
+            value={editingTask.status}
+            onValueChange={(value) => setEditingTask(prev => prev ? { ...prev, status: value as Task['status'] } : null)}
+          >
+            <SelectTrigger className="border-none bg-muted/50 focus:ring-1">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* 描述 */}
           <div className="space-y-2">
-            <Label htmlFor="description">描述</Label>
+            <Label htmlFor="description" className="text-sm font-medium">描述</Label>
             <Textarea
               id="description"
               value={editingTask.description}
               onChange={(e) => setEditingTask(prev => prev ? { ...prev, description: e.target.value } : null)}
               rows={4}
               className="resize-none"
+              placeholder="添加任务描述..."
             />
-          </div>
-
-          {/* 状态、优先级和截止时间 */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">状态</Label>
-              <Select
-                value={editingTask.status}
-                onValueChange={(value) => setEditingTask(prev => prev ? { ...prev, status: value as Task['status'] } : null)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">优先级</Label>
-              <Select
-                value={editingTask.priority}
-                onValueChange={(value) => setEditingTask(prev => prev ? { ...prev, priority: value as Task['priority'] } : null)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">高</SelectItem>
-                  <SelectItem value="medium">中</SelectItem>
-                  <SelectItem value="low">低</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="dueDate">截止时间</Label>
-              <Input
-                id="dueDate"
-                type="datetime-local"
-                value={editingTask.dueDate ? format(editingTask.dueDate, "yyyy-MM-dd'T'HH:mm") : ''}
-                onChange={(e) => setEditingTask(prev => prev ? {
-                  ...prev,
-                  dueDate: e.target.value ? new Date(e.target.value) : undefined
-                } : null)}
-              />
-            </div>
           </div>
 
           {/* 截止时间状态指示 */}

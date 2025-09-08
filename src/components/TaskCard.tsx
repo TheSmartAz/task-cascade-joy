@@ -37,7 +37,7 @@ export const TaskCard = ({
   };
 
   const formatDueDate = (date: Date) => {
-    return format(date, 'MM-dd HH:mm');
+    return format(date, 'MM-dd');
   };
 
   const getDueDateStatus = (dueDate: Date | undefined) => {
