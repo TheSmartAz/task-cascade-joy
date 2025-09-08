@@ -3,6 +3,7 @@ import { DragDropContext, DropResult } from 'react-beautiful-dnd';
 import { Column } from './Column';
 import { AddTaskForm } from './AddTaskForm';
 import { AITaskGenerator } from './AITaskGenerator';
+import { VoiceInput } from './VoiceInput';
 import { Task, Column as ColumnType } from '@/types/kanban';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, Settings } from 'lucide-react';
@@ -73,6 +74,30 @@ export const KanbanBoard = () => {
     }
   };
 
+  const handleVoiceInput = async (text: string) => {
+    if (!text.trim()) return;
+    
+    try {
+      await createTask({
+        title: text.length > 50 ? text.slice(0, 50) + '...' : text,
+        description: text,
+        status: 'todo'
+      });
+      
+      toast({
+        title: "语音任务创建成功",
+        description: `已创建任务: ${text.slice(0, 30)}...`,
+      });
+    } catch (error) {
+      console.error('Failed to create voice task:', error);
+      toast({
+        title: "创建失败",
+        description: "语音任务创建失败，请重试",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-bg p-6 flex items-center justify-center">
@@ -98,6 +123,7 @@ export const KanbanBoard = () => {
               <Settings className="h-4 w-4 mr-2" />
               LLM调试
             </Button>
+            <VoiceInput onVoiceInput={handleVoiceInput} />
             <Button variant="outline" onClick={() => setShowAIGenerator(true)}>
               <Plus className="h-4 w-4 mr-2" />
               AI生成
