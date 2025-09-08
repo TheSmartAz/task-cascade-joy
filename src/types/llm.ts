@@ -1,5 +1,5 @@
 export interface LLMConfig {
-  provider: 'openai' | 'claude' | 'gemini' | 'custom';
+  provider: 'openai' | 'claude' | 'gemini' | 'DMXAPI' |'custom';
   apiKey: string;
   baseUrl?: string;
   model: string;
